@@ -27,7 +27,10 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		Version:  1,
 		CreateAt: time.Now(),
 	}
-	if err := app.writeJSON(movie, w, http.StatusOK, nil); err != nil {
+	respEnvelope := map[string]any{
+		"movie": movie,
+	}
+	if err := app.writeJSON(respEnvelope, w, http.StatusOK, nil); err != nil {
 		app.logger.Println("sla")
 		return
 	}

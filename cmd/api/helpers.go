@@ -17,7 +17,9 @@ func (app *application) readUIDParam(r *http.Request) (int, error) {
 	return ID, nil
 }
 
-func (app *application) writeJSON(v any, w http.ResponseWriter, httpStatus int, headers http.Header) error {
+type responseEnvelope map[string]any
+
+func (app *application) writeJSON(v responseEnvelope, w http.ResponseWriter, httpStatus int, headers http.Header) error {
 	status, err := json.MarshalIndent(v, "", "\t")
 	if err != nil {
 		app.logger.Println(err)
