@@ -15,7 +15,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 	movieID, err := app.readUIDParam(r)
 	_ = movieID
 	if err != nil {
-		app.notFoundResponse(w, r, err)
+		app.notFoundResponse(w, r)
 		return
 	}
 	movie := data.Movie{
