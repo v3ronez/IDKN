@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -14,15 +13,15 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	movieID, err := app.readUIDParam(r)
+	_ = movieID
 	if err != nil {
-		http.NotFound(w, r)
+		app.notFoundResponse(w, r, err)
 		return
 	}
-	fmt.Printf("%+v\n", movieID)
 	movie := data.Movie{
 		ID:       123,
 		Title:    "a cool movie",
-		Runtime:  102,
+		Runtime:  101,
 		Genres:   []string{"action", "idk"},
 		Version:  1,
 		CreateAt: time.Now(),
@@ -31,7 +30,7 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 		"movie": movie,
 	}
 	if err := app.writeJSON(respEnvelope, w, http.StatusOK, nil); err != nil {
-		app.logger.Println("sla")
+		app.serverErrorResponse(w, r, err)
 		return
 	}
 
