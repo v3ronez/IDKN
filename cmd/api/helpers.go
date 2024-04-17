@@ -81,7 +81,6 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dest an
 			return err
 		}
 	}
-	fmt.Printf("%+v\n", dec.Decode(&struct{}{}))
 
 	//validade if the body has just one JSON
 	err = dec.Decode(&struct{}{})
