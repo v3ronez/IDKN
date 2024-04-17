@@ -21,7 +21,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 	// 	return
 	// }
 	if err := app.readJSON(w, r, &input); err != nil {
-		app.errorResponse(w, r, http.StatusBadRequest, err.Error())
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
@@ -29,7 +29,7 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 }
 
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
-	movieID, err := app.readUIDParam(r)
+	movieID, err := app.readIDParam(r)
 	_ = movieID
 	if err != nil {
 		app.notFoundResponse(w, r)

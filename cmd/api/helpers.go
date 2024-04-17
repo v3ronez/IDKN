@@ -11,7 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-func (app *application) readUIDParam(r *http.Request) (int, error) {
+func (app *application) readIDParam(r *http.Request) (int, error) {
 	ID, err := strconv.Atoi(chi.URLParam(r, "ID"))
 	if err != nil || ID < 1 {
 		return 0, errors.New("invalid id parameter")
@@ -71,4 +71,7 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, dest an
 	default:
 		return err
 	}
+}
+func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Request, err error) {
+	app.errorResponse(w, r, http.StatusBadRequest, err.Error())
 }
