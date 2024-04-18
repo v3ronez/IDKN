@@ -38,6 +38,7 @@ func main() {
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
+
 	logger.Printf("running %s server on %s", cfg.envMode, serv.Addr)
 	if err := serv.ListenAndServe(); err != nil {
 		log.Fatal(err)
