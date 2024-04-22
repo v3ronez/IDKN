@@ -9,13 +9,13 @@ import (
 )
 
 type Movie struct {
-	ID       int64     `json:"id"`
-	Title    string    `json:"title"`
-	CreateAt time.Time `json:"created_at"`
-	Year     int32     `json:"year,omitempty"`
-	Runtime  Runtinme  `json:"runtime,omitempty"`
-	Genres   []string  `json:"genres,omitempty"`
-	Version  int32     `json:"version"`
+	ID        int64     `json:"id"`
+	Title     string    `json:"title"`
+	CreatedAt time.Time `json:"created_at"`
+	Year      int32     `json:"year,omitempty"`
+	Runtime   Runtinme  `json:"runtime,omitempty"`
+	Genres    []string  `json:"genres,omitempty"`
+	Version   int32     `json:"version"`
 }
 
 func ValidateMovie(v *validator.Validator, movie *Movie) {
@@ -42,11 +42,24 @@ func (m MovieModel) Insert(movie *Movie) error {
 		values ($1,$2,$3,$4) 
 		RETURNING id, created_at, version`
 	args := []any{movie.Title, movie.Year, movie.Runtime, pq.Array(movie.Genres)}
-	return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreateAt, &movie.Version)
+	return m.DB.QueryRow(query, args...).Scan(&movie.ID, &movie.CreatedAt, &movie.Version)
 }
 
 func (m MovieModel) Get(id int64) (*Movie, error) {
-	return nil, nil
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	query := `
+	SELECT id, created_at, title, year, runtime, genres, version 
+	FROM movies
+	WHERE id = $1`
+	var movie Movie
+	if err := m.DB.QueryRow(query, id).Scan(&movie.ID,
+		&movie.CreatedAt, &movie.Title, &movie.Year, &movie.Runtime, pq.Array(&movie.Genres), &movie.Version); err != nil {
+		return nil, err
+	}
+	return &movie, nil
 }
 
 func (m MovieModel) Update(movie *Movie) error {

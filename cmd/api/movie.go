@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/v3ronez/IDKN/internal/data"
 	"github.com/v3ronez/IDKN/internal/validator"
@@ -50,18 +49,14 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	movieID, err := app.readIDParam(r)
-	_ = movieID
 	if err != nil {
 		app.notFoundResponse(w, r)
 		return
 	}
-	movie := data.Movie{
-		ID:       123,
-		Title:    "a cool movie",
-		Runtime:  101,
-		Genres:   []string{"action", "idk"},
-		Version:  1,
-		CreateAt: time.Now(),
+	movie, err := app.models.Movies.Get(int64(movieID))
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
 	}
 	respEnvelope := map[string]any{
 		"movie": movie,
