@@ -110,6 +110,14 @@ func initDB(cfg *config) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
+	conn.SetConnMaxIdleTime(time.Duration(cfg.db.maxIdleConns))
+	conn.SetMaxOpenConns(cfg.db.maxOpenConns)
+	durantion, err := time.ParseDuration(cfg.db.maxIndleTime)
+	if err != nil {
+		return nil, err
+	}
+	conn.SetConnMaxLifetime(durantion)
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
