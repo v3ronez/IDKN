@@ -14,6 +14,7 @@ import (
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/v3ronez/IDKN/internal/data"
 )
 
 const version = "1.0"
@@ -38,6 +39,7 @@ type config struct {
 type application struct {
 	config config
 	logger *log.Logger
+	models data.Models
 }
 
 func main() {
@@ -62,8 +64,8 @@ func main() {
 	if err != nil {
 		app.logger.Fatalf("fatal error to open connection with db. error: %s", err)
 	}
-
 	defer connect.Close()
+	app.models = data.NewModels(connect)
 
 	serv := &http.Server{
 		Addr:         fmt.Sprintf("localhost:%d", app.config.servPort),
