@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -55,15 +56,21 @@ func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request)
 	}
 	movie, err := app.models.Movies.Get(int64(movieID))
 	if err != nil {
-		app.notFoundResponse(w, r)
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
 		return
 	}
 	respEnvelope := map[string]any{
 		"movie": movie,
 	}
+
 	if err := app.writeJSON(respEnvelope, w, http.StatusOK, nil); err != nil {
 		app.serverErrorResponse(w, r, err)
-		return
+		return`
 	}
 
 }
