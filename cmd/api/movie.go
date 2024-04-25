@@ -47,6 +47,39 @@ func (app *application) createMovieHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (app *application) listMoviesHandler(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title   string
+		Genres  []string
+		filters data.Filters
+	}
+	v := validator.New()
+	qs := r.URL.Query()
+	input.Title = app.readString(qs, "title", "")
+	input.Genres = app.readCSV(qs, "genres", []string{})
+
+	input.filters.Page = app.readInt(qs, "page", 1, v)
+	input.filters.PageSize = app.readInt(qs, "page_size", 20, v)
+
+	input.filters.Sort = app.readString(qs, "sort", "id")
+
+	input.filters.SortSafeList = []string{"id", "title", "year", "runtime", "-id", "-title", "-year", "-runtime"}
+
+	if data.ValidateFields(v, input.filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+	movies, err := app.models.Movies.GetAll()
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+	if err := app.writeJSON(responseEnvelope{"movies": movies}, w, http.StatusOK, nil); err != nil {
+		app.serverErrorResponse(w, r, err)
+	}
+
+}
+
 func (app *application) showMovieHandler(w http.ResponseWriter, r *http.Request) {
 	movieID, err := app.readIDParam(r)
 	if err != nil {

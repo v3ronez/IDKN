@@ -14,6 +14,7 @@ type Models struct {
 	Movies interface {
 		Insert(movie *Movie) error
 		Get(id int64) (*Movie, error)
+		GetAll() ([]*Movie, error)
 		Update(movie *Movie) error
 		Delete(id int64) error
 	}

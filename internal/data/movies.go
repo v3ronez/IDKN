@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"time"
@@ -68,6 +69,39 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 	return &movie, nil
 }
 
+func (m MovieModel) GetAll() ([]*Movie, error) {
+	query := `SELECT id, created_at, title, year, runtime, genres, version FROM movies ORDER by id`
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	result, err := m.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer result.Close()
+	var movies []*Movie
+
+	for result.Next() {
+		var movie Movie
+		err := result.Scan(
+			&movie.ID,
+			&movie.CreatedAt,
+			&movie.Title,
+			&movie.Year,
+			&movie.Runtime,
+			pq.Array(&movie.Genres),
+			&movie.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+		movies = append(movies, &movie)
+	}
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+	return movies, nil
+}
+
 func (m MovieModel) Update(movie *Movie) error {
 	query := `
 			UPDATE movies
@@ -114,9 +148,15 @@ type MockMovieModel struct{}
 func (m MockMovieModel) Insert(movie *Movie) error {
 	return nil
 }
+
 func (m MockMovieModel) Get(id int64) (*Movie, error) {
 	return nil, nil
 }
+
+func (m MockMovieModel) GetAll() ([]*Movie, error) {
+	return nil, nil
+}
+
 func (m MockMovieModel) Update(movie *Movie) error {
 	return nil
 }
