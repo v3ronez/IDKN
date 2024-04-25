@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/lib/pq"
@@ -69,20 +70,30 @@ func (m MovieModel) Get(id int64) (*Movie, error) {
 	return &movie, nil
 }
 
-func (m MovieModel) GetAll() ([]*Movie, error) {
-	query := `SELECT id, created_at, title, year, runtime, genres, version FROM movies ORDER by id`
+func (m MovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
+	query := fmt.Sprintf(`
+		SELECT count(*) OVER(), id, created_at, title, year, runtime, genres, version
+		FROM movies
+		WHERE (LOWER(title) = LOWER($1) OR $1 = '')
+		AND (genres @> $2 OR $2 = '{}')
+		ORDER by %s %s, id ASC
+		LIMIT $3 OFFSET $4`, filters.sortColumns(), filters.sortDirection())
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	result, err := m.DB.QueryContext(ctx, query)
+
+	args := []any{title, pq.Array(genres), filters.limit(), filters.offset()}
+	result, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 	defer result.Close()
 	var movies []*Movie
-
+	totalRecord := 0
 	for result.Next() {
 		var movie Movie
 		err := result.Scan(
+			&totalRecord,
 			&movie.ID,
 			&movie.CreatedAt,
 			&movie.Title,
@@ -92,14 +103,15 @@ func (m MovieModel) GetAll() ([]*Movie, error) {
 			&movie.Version,
 		)
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 		movies = append(movies, &movie)
 	}
 	if err := result.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
-	return movies, nil
+	metadata := CalculateMetadata(len(movies), filters.Page, filters.PageSize)
+	return movies, metadata, nil
 }
 
 func (m MovieModel) Update(movie *Movie) error {
@@ -153,8 +165,8 @@ func (m MockMovieModel) Get(id int64) (*Movie, error) {
 	return nil, nil
 }
 
-func (m MockMovieModel) GetAll() ([]*Movie, error) {
-	return nil, nil
+func (m MockMovieModel) GetAll(title string, genres []string, filters Filters) ([]*Movie, Metadata, error) {
+	return nil, Metadata{}, nil
 }
 
 func (m MockMovieModel) Update(movie *Movie) error {
