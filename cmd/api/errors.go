@@ -19,6 +19,14 @@ func (app *application) errorResponse(w http.ResponseWriter, r *http.Request, st
 		w.WriteHeader(status)
 	}
 }
+func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
+	response := responseEnvelope{"error": "rate limit exceeded"}
+	err := app.writeJSON(response, w, http.StatusTooManyRequests, nil)
+	if err != nil {
+		app.logError(r, err)
+		w.WriteHeader(http.StatusTooManyRequests)
+	}
+}
 
 func (app *application) serverErrorResponse(w http.ResponseWriter, r *http.Request, err error) {
 	app.logError(r, err)

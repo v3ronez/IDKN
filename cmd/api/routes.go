@@ -8,6 +8,9 @@ import (
 
 func (app *application) routes() *chi.Mux {
 	routes := chi.NewRouter()
+	routes.Use(app.recoverPanic)
+	// routes.Use(app.rateLimit)
+	routes.Use(app.rateLimitPerClient)
 	routes.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		app.notFoundResponse(w, r)
 	})
