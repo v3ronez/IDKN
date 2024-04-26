@@ -38,9 +38,14 @@ type config struct {
 	db       dbConfig
 }
 type application struct {
-	config config
-	logger *jsonlog.Logger
-	models data.Models
+	config  config
+	logger  *jsonlog.Logger
+	models  data.Models
+	limiter struct {
+		rps     float64
+		burst   int
+		enabled bool
+	}
 }
 
 func main() {
@@ -101,6 +106,9 @@ func initConfigApp(app *application, cfg *config) error {
 
 	app.config = *cfg
 	app.logger = logger
+	app.limiter.rps = 2
+	app.limiter.burst = 4
+	app.limiter.enabled = true
 	return nil
 }
 
