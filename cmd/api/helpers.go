@@ -58,7 +58,7 @@ func (app *application) writeJSON(v responseEnvelope, w http.ResponseWriter, htt
 
 	json, err := json.MarshalIndent(v, "", "\t")
 	if err != nil {
-		app.logger.Println(err)
+		app.logger.PrintError(err, nil)
 		return err
 	}
 	json = append(json, '\n')

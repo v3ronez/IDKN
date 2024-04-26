@@ -15,6 +15,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/v3ronez/IDKN/internal/data"
+	"github.com/v3ronez/IDKN/internal/jsonlog"
 )
 
 const version = "1.0"
@@ -38,7 +39,7 @@ type config struct {
 }
 type application struct {
 	config config
-	logger *log.Logger
+	logger *jsonlog.Logger
 	models data.Models
 }
 
@@ -62,8 +63,9 @@ func main() {
 	connect, err := initDB(&app.config)
 
 	if err != nil {
-		app.logger.Fatalf("fatal error to open connection with db. error: %s", err)
+		app.logger.PrintFatal(err, nil)
 	}
+
 	defer connect.Close()
 	app.models = data.NewModels(connect)
 
@@ -75,14 +77,17 @@ func main() {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	app.logger.Printf("running %s server on %s", app.config.envMode, serv.Addr)
+	app.logger.PrintInfo("running server!", map[string]string{
+		"mode":           app.config.envMode,
+		"server_address": serv.Addr,
+	})
 	if err := serv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}
 }
 
 func initConfigApp(app *application, cfg *config) error {
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 	port, err := strconv.ParseInt(os.Getenv("DB_PORT"), 10, 32)
 	if err != nil {
 		return err
