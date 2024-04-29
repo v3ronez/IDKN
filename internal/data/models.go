@@ -18,13 +18,13 @@ type Models struct {
 		Update(movie *Movie) error
 		Delete(id int64) error
 	}
+	Users UserModel
 }
 
 func NewModels(db *sql.DB) Models {
 	return Models{
-		Movies: MovieModel{
-			DB: db,
-		},
+		Movies: MovieModel{DB: db},
+		Users:  UserModel{DB: db},
 	}
 }
 
