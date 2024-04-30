@@ -6,10 +6,10 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -54,6 +54,7 @@ type application struct {
 		enabled bool
 	}
 	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
@@ -81,21 +82,9 @@ func main() {
 
 	defer connect.Close()
 	app.models = data.NewModels(connect)
-
-	serv := &http.Server{
-		Addr:         fmt.Sprintf("localhost:%d", app.config.servPort),
-		Handler:      app.routes(),
-		IdleTimeout:  time.Minute,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-	}
-
-	app.logger.PrintInfo("running server!", map[string]string{
-		"mode":           app.config.envMode,
-		"server_address": serv.Addr,
-	})
-	if err := serv.ListenAndServe(); err != nil {
-		log.Fatal(err)
+	err = app.server()
+	if err != nil {
+		app.logger.PrintFatal(err, nil)
 	}
 }
 
