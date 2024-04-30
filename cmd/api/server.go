@@ -24,10 +24,10 @@ func (app *application) server() error {
 	go func() {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		s := <-quit
+		sig := <-quit
 
 		app.logger.PrintInfo("shutting down server", map[string]string{
-			"signal": s.String(),
+			"signal": sig.String(),
 		})
 
 		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
