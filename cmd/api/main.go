@@ -16,6 +16,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/v3ronez/IDKN/internal/data"
 	"github.com/v3ronez/IDKN/internal/jsonlog"
+	"github.com/v3ronez/IDKN/internal/mailer"
 )
 
 const version = "1.0"
@@ -36,6 +37,12 @@ type config struct {
 	servPort int
 	envMode  string
 	db       dbConfig
+	smtp     struct {
+		host     string
+		port     int
+		username string
+		password string
+	}
 }
 type application struct {
 	config  config
@@ -46,13 +53,13 @@ type application struct {
 		burst   int
 		enabled bool
 	}
+	mailer mailer.Mailer
 }
 
 func main() {
 	if err := initEnv(); err != nil {
 		log.Fatalf("fatal error to read env file. error: %s", err)
 	}
-	app := &application{}
 	config := &config{}
 	flag.IntVar(&config.servPort, "port", 8000, "API server port")
 	flag.StringVar(&config.envMode, "env", "dev", "Environment (dev|staging|production)")
@@ -61,7 +68,8 @@ func main() {
 	flag.StringVar(&config.db.maxIndleTime, "db-max-idle-time", "15m", "set default value db to idle time conn")
 	flag.Parse()
 
-	if err := initConfigApp(app, config); err != nil {
+	app, err := initConfigApp(config)
+	if err != nil {
 		panic(err)
 	}
 
@@ -91,11 +99,14 @@ func main() {
 	}
 }
 
-func initConfigApp(app *application, cfg *config) error {
-	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
+func initConfigApp(cfg *config) (*application, error) {
 	port, err := strconv.ParseInt(os.Getenv("DB_PORT"), 10, 32)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	portSmtp, err := strconv.Atoi(os.Getenv("EMAIL_PORT"))
+	if err != nil {
+		return nil, err
 	}
 	cfg.db.user = os.Getenv("DB_USER")
 	cfg.db.password = os.Getenv("DB_PASSWORD")
@@ -103,13 +114,28 @@ func initConfigApp(app *application, cfg *config) error {
 	cfg.db.port = port
 	cfg.db.dbname = os.Getenv("DB_DATABASE")
 	cfg.db.sslmode = os.Getenv("DB_SSL_MODE")
+	cfg.smtp.host = os.Getenv("EMAIL_HOST")
+	cfg.smtp.port = portSmtp
+	cfg.smtp.username = os.Getenv("EMAIL_USERNAME")
+	cfg.smtp.password = os.Getenv("EMAIL_PASSWORD")
 
-	app.config = *cfg
-	app.logger = logger
-	app.limiter.rps = 2
-	app.limiter.burst = 4
-	app.limiter.enabled = true
-	return nil
+	app := &application{
+		config: *cfg,
+		mailer: mailer.New(
+			*&cfg.smtp.host,
+			*&cfg.smtp.port,
+			*&cfg.smtp.username,
+			*&cfg.smtp.password,
+			"Greenlight <no-reply@greenlight.alexedwards.net>"),
+		logger: jsonlog.New(os.Stdout, jsonlog.LevelInfo),
+		limiter: struct {
+			rps     float64
+			burst   int
+			enabled bool
+		}{2, 4, true},
+	}
+
+	return app, nil
 }
 
 func initDB(cfg *config) (*sql.DB, error) {
