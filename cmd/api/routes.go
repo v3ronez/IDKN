@@ -25,6 +25,9 @@ func (app *application) routes() *chi.Mux {
 	routes.Post("/v1/movies", app.createMovieHandler)
 	routes.Delete("/v1/movies/{ID}", app.deleteMovieHandler)
 
+	//users
 	routes.Post("/v1/users", app.registerUserHandler)
+	routes.Put("/v1/users/activated", app.activateUserHandler)
+
 	return routes
 }
