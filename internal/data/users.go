@@ -13,6 +13,7 @@ import (
 
 var (
 	ErrDuplicateEmail = errors.New("duplicate email")
+	AnonymousUser     = &User{}
 )
 
 type User struct {
@@ -58,7 +59,7 @@ func ValidateEmail(v *validator.Validator, email string) {
 	v.Check(validator.Matches(email, validator.EmailRX), "email", "must be a valid email address")
 }
 
-func validatePaswordPlainText(v *validator.Validator, plainTextPassword string) {
+func ValidatePaswordPlainText(v *validator.Validator, plainTextPassword string) {
 	v.Check(plainTextPassword != "", "password", "must be provided")
 	v.Check(len(plainTextPassword) >= 8, "password", "must at least 8 bytes long")
 	v.Check(len(plainTextPassword) <= 72, "password", "must not be more than 72 bytes long")
@@ -70,7 +71,7 @@ func ValidateUser(v *validator.Validator, user *User) {
 	ValidateEmail(v, user.Email)
 
 	if user.Password.plainText != nil {
-		validatePaswordPlainText(v, *user.Password.plainText)
+		ValidatePaswordPlainText(v, *user.Password.plainText)
 	}
 	if user.Password.hash == nil {
 		panic("missing password hash for user")
@@ -103,10 +104,12 @@ func (u UserModel) Insert(user *User) error {
 
 func (u UserModel) GetByEmail(email string) (*User, error) {
 	query := `
-			SELECT id,
+			SELECT
+			id,
 			created_at,
 			name,
 			email,
+			password_hash,
 			activated,
 			version
 			FROM users WHERE email = $1`
@@ -118,6 +121,7 @@ func (u UserModel) GetByEmail(email string) (*User, error) {
 		&user.CreatedAt,
 		&user.Name,
 		&user.Email,
+		&user.Password.hash,
 		&user.Activated,
 		&user.Version,
 	); err != nil {
@@ -184,4 +188,8 @@ func (u UserModel) GetForToken(scope, tokenPlainText string) (*User, error) {
 		}
 	}
 	return &user, nil
+}
+
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }

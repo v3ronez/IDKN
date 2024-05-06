@@ -136,6 +136,16 @@ func (app *application) editConflictResponse(w http.ResponseWriter, r *http.Requ
 	app.errorResponse(w, r, http.StatusConflict, message)
 }
 
+func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid credentials"
+	app.errorResponse(w, r, http.StatusConflict, message)
+}
+
+func (app *application) invalidAuthenticationTokenResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid token authorization"
+	app.errorResponse(w, r, http.StatusConflict, message)
+}
+
 func (app *application) background(fn func()) {
 	app.wg.Add(1)
 	go func() {
