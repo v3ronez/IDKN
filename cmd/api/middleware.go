@@ -148,10 +148,11 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 			return
 		}
 
-		if !permissons.Exists(code) {
+		if !permissons.Includes(code) {
 			app.notPermittedResponse(w, r)
 			return
 		}
+
 		next.ServeHTTP(w, r)
 	})
 }
