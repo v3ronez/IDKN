@@ -19,7 +19,7 @@ func (app *application) routes() *chi.Mux {
 	})
 	routes.Get("/v1/healthcheck", app.requireActivatedUser(app.healthcheckHandler))
 	routes.Get("/v1/movies/{ID}", app.requireActivatedUser(app.showMovieHandler))
-	routes.Get("/v1/movies", app.requireActivatedUser(app.listMoviesHandler))
+	routes.Get("/v1/movies", app.requireActivatedUser(app.requirePermission("movie:read", app.listMoviesHandler)))
 	// routes.Put("/v1/movies/{ID}", app.updateMovieHandler)
 	routes.Patch("/v1/movies/{ID}", app.requireActivatedUser(app.updateMovieHandler))
 	routes.Post("/v1/movies", app.requireActivatedUser(app.createMovieHandler))
@@ -28,6 +28,9 @@ func (app *application) routes() *chi.Mux {
 	//user
 	routes.Post("/v1/users", app.registerUserHandler)
 	routes.Put("/v1/users/activated", app.activateUserHandler)
+
+	// permissions
+	routes.Get("/v1/users/permissions/{ID}", app.getPermissionsByUserID)
 
 	//token
 	routes.Post("/v1/tokens/authentication", app.createAutheticationTokenHandler)
