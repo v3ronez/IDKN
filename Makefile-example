@@ -7,3 +7,5 @@ migrate-down:
 
 run:
 	@go run ./cmd/api
+
+build:
