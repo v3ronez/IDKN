@@ -33,3 +33,12 @@ vendor:
 	@go mod verify
 	@echo 'Vendoring dependencies...'
 	@go mod vendor
+
+#Build
+build/api:
+	@echo 'Building...'
+	@go build -o=./bin/api ./cmd/api
+
+build/api short:
+	@echo 'Building short binary...'
+	@go build -ldflags='-s' -o=./bin/api ./cmd/api
