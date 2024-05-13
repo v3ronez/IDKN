@@ -1,0 +1,9 @@
+# migrations
+migrate-up:
+	@migrate -path=./migrations -database=postgres://name:password@localhost/greenlight?sslmode=disable up
+
+migrate-down:
+	@migrate -path=./migrations -database=postgres://name:password@localhost/greenlight?sslmode=disable down $(n)
+
+run:
+	@go run ./cmd/api
