@@ -51,9 +51,14 @@ func (app *application) registerUserHandler(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}
-
+	err = app.models.Permissions.AddForUser(user.ID, "movie:read")
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
 	app.background(func() {
-		token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivation)
+
 		data := map[string]any{
 			"user":            user,
 			"activationToken": token.PlainText,
