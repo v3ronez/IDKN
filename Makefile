@@ -39,6 +39,6 @@ build/api:
 	@echo 'Building...'
 	@go build -o=./bin/api ./cmd/api
 
-build/api short:
+build/api-short:
 	@echo 'Building short binary...'
 	@go build -ldflags='-s' -o=./bin/api ./cmd/api

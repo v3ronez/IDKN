@@ -70,7 +70,14 @@ func main() {
 	flag.IntVar(&config.db.maxOpenConns, "db-max-open-conns", 25, "set default value to db max open conns")
 	flag.IntVar(&config.db.maxIdleConns, "db-max-idle-conns", 25, "set default value to db max idle conns")
 	flag.StringVar(&config.db.maxIndleTime, "db-max-idle-time", "15m", "set default value db to idle time conn")
+
+	displayVersion := flag.Bool("version", false, "Display version and exit")
 	flag.Parse()
+
+	if *displayVersion {
+		fmt.Printf("Version:\t%s\n", version)
+		os.Exit(0)
+	}
 
 	app, err := initConfigApp(config)
 	if err != nil {
