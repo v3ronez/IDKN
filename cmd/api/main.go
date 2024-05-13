@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"database/sql"
+	"expvar"
 	"flag"
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -61,6 +63,7 @@ func main() {
 	if err := initEnv(); err != nil {
 		log.Fatalf("fatal error to read env file. error: %s", err)
 	}
+
 	config := &config{}
 	flag.IntVar(&config.servPort, "port", 8000, "API server port")
 	flag.StringVar(&config.envMode, "env", "dev", "Environment (dev|staging|production)")
@@ -82,6 +85,22 @@ func main() {
 
 	defer connect.Close()
 	app.models = data.NewModels(connect)
+
+	//metrics
+	expvar.NewString("version").Set(version)
+	expvar.Publish("goroutines", expvar.Func(func() any {
+		return runtime.NumGoroutine()
+	}))
+	expvar.Publish("CPU", expvar.Func(func() any {
+		return runtime.NumCPU()
+	}))
+	expvar.Publish("database", expvar.Func(func() any {
+		return app.models.Users.DB.Stats()
+	}))
+	expvar.Publish("timestamp", expvar.Func(func() any {
+		return time.Now().Unix()
+	}))
+
 	err = app.server()
 	if err != nil {
 		app.logger.PrintFatal(err, nil)

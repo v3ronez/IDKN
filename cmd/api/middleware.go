@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"expvar"
 	"fmt"
 	"net"
 	"net/http"
@@ -126,6 +127,7 @@ func (app *application) authenticate(next http.Handler) http.Handler {
 
 func (app *application) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		user := app.contextGetUser(r)
 		if user.IsAnonymous() {
 			app.authenticationRequiredResponse(w, r)
@@ -154,5 +156,21 @@ func (app *application) requirePermission(code string, next http.HandlerFunc) ht
 		}
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func (app *application) Metrics(next http.Handler) http.Handler {
+	totalRequestReceived := expvar.NewInt("total_requests_received")
+	totalResponsesSent := expvar.NewInt("total_responses_sent")
+	timeTaked := expvar.NewInt("time_processing_μs")
+
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		totalRequestReceived.Add(1)
+
+		next.ServeHTTP(w, r)
+
+		totalResponsesSent.Add(1)
+		timeTaked.Add(time.Now().Sub(start).Microseconds())
 	})
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"expvar"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -9,8 +10,9 @@ import (
 func (app *application) routes() *chi.Mux {
 	routes := chi.NewRouter()
 	routes.Use(app.recoverPanic)
-	routes.Use(app.rateLimitPerClient)
-	routes.Use(app.authenticate)
+	// routes.Use(app.rateLimitPerClient)
+	// routes.Use(app.authenticate)
+	routes.Use(app.Metrics)
 	routes.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		app.notFoundResponse(w, r)
 	})
@@ -34,5 +36,8 @@ func (app *application) routes() *chi.Mux {
 
 	//token
 	routes.Post("/v1/tokens/authentication", app.createAutheticationTokenHandler)
+
+	//metrics
+	routes.Get("/debug/vars", expvar.Handler().ServeHTTP)
 	return routes
 }
