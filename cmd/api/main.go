@@ -130,10 +130,10 @@ func initConfigApp(cfg *config) (*application, error) {
 	app := &application{
 		config: *cfg,
 		mailer: mailer.New(
-			*&cfg.smtp.host,
-			*&cfg.smtp.port,
-			*&cfg.smtp.username,
-			*&cfg.smtp.password,
+			cfg.smtp.host,
+			cfg.smtp.port,
+			cfg.smtp.username,
+			cfg.smtp.password,
 			"Greenlight <no-reply@greenlight.alexedwards.net>"),
 		logger: jsonlog.New(os.Stdout, jsonlog.LevelInfo),
 		limiter: struct {

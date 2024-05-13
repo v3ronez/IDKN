@@ -1,11 +1,31 @@
 # migrations
+# ${GREENLIGHT_DB_DSN} use env variables
+
 migrate-up:
 	@migrate -path=./migrations -database=postgres://name:password@localhost/greenlight?sslmode=disable up
 
 migrate-down:
 	@migrate -path=./migrations -database=postgres://name:password@localhost/greenlight?sslmode=disable down $(n)
 
+migration:
+@echo 'Creating migration files for ${name}...'
+migrate create -seq -ext=.sql -dir=./migrations ${name}
+
 run:
 	@go run ./cmd/api
 
-build:
+# confirm
+confirm:
+	@echo 'Are you sure? [y/N]' && read ans && [ $${ans:-N} = y ]
+
+# Audit
+audit:
+	@echo 'Tidying and verifying module dependencies...' go mod tidy
+	go mod verify
+	@echo 'Formatting code...'
+	go fmt ./...
+	@echo 'Vetting code...'
+	go vet ./...
+	staticcheck ./...
+	@echo 'Running tests...'
+	go test -race -vet=off ./...

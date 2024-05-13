@@ -171,6 +171,6 @@ func (app *application) Metrics(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 
 		totalResponsesSent.Add(1)
-		timeTaked.Add(time.Now().Sub(start).Microseconds())
+		timeTaked.Add(int64(time.Since(start).Microseconds()))
 	})
 }
